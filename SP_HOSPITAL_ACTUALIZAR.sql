@@ -1,44 +1,35 @@
-CREATE OR REPLACE PROCEDURE SP_HOSPITAL_ACTUALIZAR(
-    p_hospital IN NUMBER,
-    p_nombre IN VARCHAR,
-    p_gerente IN NUMBER,
-    p_condicion IN NUMBER,
-    p_distrito IN NUMBER,
-    v_mensaje OUT VARCHAR
-) 
-IS
-    CURSOR distritos IS
-        SELECT idDistrito FROM DISTRITO;
-        
-    v_sede NUMBER;
+create or replace PROCEDURE SP_HOSPITAL_ACTUALIZAR(
+    p_idHospital IN HOSPITAL.idHospital%TYPE,
+    p_nombre IN VARCHAR2,
+    p_antiguedad IN NUMBER,
+    p_idDistrito IN NUMBER,
+    p_area IN HOSPITAL.area%TYPE,
+    p_idSede IN NUMBER,
+    p_idGerente IN NUMBER,
+    p_idCondicion IN NUMBER,
+    p_fechaRegistro IN DATE,
+    v_mensaje OUT VARCHAR2
+) IS
 BEGIN
-
-    FOR distrito_record IN distritos LOOP
-        
-        IF distrito_record.idDistrito = p_distrito THEN
-            
-            CASE p_distrito
-                WHEN 1 THEN v_sede := 1;
-                WHEN 2 THEN v_sede := 2;
-                WHEN 3 THEN v_sede := 3;
-                WHEN 4 THEN v_sede := 4;
-                WHEN 5 THEN v_sede := 5;
-                ELSE v_sede := 1;
-            END CASE;
-        END IF;
-    END LOOP;
-
-    
     UPDATE HOSPITAL
-    SET iddistrito = p_distrito,
-        nombre = UPPER(p_nombre),
-        idsede = v_sede,
-        idgerente = p_gerente,
-        idcondicion = p_condicion,
-        fecharegistro = last_day(sysdate)
-    WHERE idhospital = p_hospital;
+    SET nombre = p_nombre,
+        antiguedad = p_antiguedad,
+        idDistrito = p_idDistrito,
+        area = p_area,
+        idSede = p_idSede,
+        idGerente = p_idGerente,
+        idCondicion = p_idCondicion,
+        fechaRegistro = p_fechaRegistro
+    WHERE idHospital = p_idHospital;
 
-    v_mensaje := 'Actualización de Hospitales completada.';
+    -- Confirmar actualización exitosa
+    IF SQL%ROWCOUNT = 1 THEN
+        COMMIT;
+        v_mensaje := 'Hospital actualizado en la Base de Datos';
+    ELSE
+        v_mensaje := 'Error: No se pudo actualizar el hospital';
+        RETURN;
+    END IF;
 EXCEPTION
     WHEN OTHERS THEN
         v_mensaje := 'Error: ' || SQLERRM;
